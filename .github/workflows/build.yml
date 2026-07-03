@@ -1,4 +1,4 @@
-name: Build ChuNiZiMu (C++ Static)
+name: Build ChuNiZiMu
 
 on:
     workflow_dispatch:
@@ -25,19 +25,19 @@ jobs:
     build:
         runs-on: ubuntu-latest
         steps:
-            - name: Checkout source
+            - name: Checkout
               uses: actions/checkout@v4
 
             # toolchains
             # Android NDK
-            - name: Setup Android NDK
+            - name: Set up Android NDK
               if: inputs.platform == 'android'
               uses: nttld/setup-ndk@v1
               with:
                   ndk-version: r26d
 
             # Linux / Windows
-            - name: Install Cross-Compilers (Linux & Windows)
+            - name: Set up GCC / MinGW
               if: inputs.platform == 'linux' || inputs.platform == 'windows'
               run: |
                   sudo apt-get update
@@ -81,7 +81,7 @@ jobs:
                     esac
                   fi
 
-            - name: Build Project
+            - name: Build
               run: |
                   mkdir -p build && cd build
 
