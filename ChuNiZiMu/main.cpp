@@ -74,6 +74,8 @@ static bool contains(const std::vector<std::string>& vec, const std::string& val
     return false;
 }
 
+static void gameMain(std::vector<Song>& songs, bool revealSpacesInitially, bool showCorrectAnswers, bool preserveAnyRevealedLetter);
+
 static void gameInit() {
     ConsolePlus::setTitle("音游开字母(Chu Ni Zi Mu) - 根据已揭露的字符盲猜音游曲名");
     clearScreen();
