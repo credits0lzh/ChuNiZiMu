@@ -10,7 +10,6 @@ on:
                 options:
                     - windows
                     - linux
-                    - macos
                     - android
             arch:
                 description: "Target architecture"
@@ -24,21 +23,20 @@ on:
 
 jobs:
     build:
-        runs-on: ${{ inputs.platform == 'macos' && 'macos-latest' || 'ubuntu-latest' }}
+        runs-on: 'ubuntu-latest'
         steps:
             - name: Checkout source
               uses: actions/checkout@v4
 
-            # ── 使用预定义 Actions 安装编译工具链 ──
-
-            # 1. Android NDK
+            # toolchains
+            # Android NDK
             - name: Setup Android NDK
               if: inputs.platform == 'android'
               uses: nttld/setup-ndk@v1
               with:
                   ndk-version: r26d
 
-            # 2. Linux / Windows 交叉编译器 (使用 apt 标准安装)
+            # Linux / Windows
             - name: Install Cross-Compilers (Linux & Windows)
               if: inputs.platform == 'linux' || inputs.platform == 'windows'
               run: |
@@ -53,7 +51,7 @@ jobs:
                     esac
                   fi
 
-            # ── 环境变量配置 ──
+            # env
             - name: Configure Environment
               run: |
                   if [ "${{ inputs.platform }}" == "android" ]; then
@@ -83,7 +81,6 @@ jobs:
                     esac
                   fi
 
-            # ── 统一构建步骤 ──
             - name: Build Project
               run: |
                   mkdir -p build && cd build
@@ -108,17 +105,6 @@ jobs:
                       -DANDROID_PLATFORM=android-21 \
                       -DCMAKE_BUILD_TYPE=Release
 
-                  elif [ "${{ inputs.platform }}" == "macos" ]; then
-                    case "${{ inputs.arch }}" in
-                      x86)    ARCH="i386" ;;
-                      x86_64) ARCH="x86_64" ;;
-                      arm32)  ARCH="arm" ;;
-                      arm64)  ARCH="arm64" ;;
-                    esac
-                    cmake .. \
-                      -DCMAKE_OSX_ARCHITECTURES=${ARCH} \
-                      -DCMAKE_BUILD_TYPE=Release || echo "macOS may not support target: $ARCH"
-
                   else # Linux
                     cmake .. \
                       -DCMAKE_C_COMPILER=${CC} \
@@ -129,7 +115,6 @@ jobs:
 
                   cmake --build . -j$(nproc 2>/dev/null || sysctl -n hw.ncpu)
 
-            # ── 产物收集 ──
             - name: Determine artifact name
               id: artifact
               run: |
