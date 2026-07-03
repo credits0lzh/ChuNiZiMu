@@ -13,7 +13,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-Wall -Wextra)
 endif()
 
-# 添加源码子目录
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ChuNiZiMu)
 
 add_executable(chunizimu
@@ -29,17 +28,10 @@ if(WIN32)
     target_link_libraries(chunizimu PRIVATE kernel32)
 endif()
 
-# 全平台静态编译策略
-if(APPLE)
-    # macOS 不支持完全静态链接系统库，仅静态链接 C/C++ 运行时
-    target_link_options(chunizimu PRIVATE -static-libgcc -static-libstdc++)
-elseif(MINGW)
-    # Windows MinGW 全静态链接
+if(MINGW)
+    # Windows MinGW static
     target_link_options(chunizimu PRIVATE -static -static-libgcc -static-libstdc++)
-elseif(ANDROID)
-    # Android NDK 全静态链接
-    target_link_options(chunizimu PRIVATE -static)
 else()
-    # Linux 全静态链接
+    # Android NDK & Linux static
     target_link_options(chunizimu PRIVATE -static)
 endif()
