@@ -3,7 +3,7 @@
     <PropertyGroup>
         <AssemblyName>chunizimu</AssemblyName>
         <AssemblyTitle>Chu Ni Zi Mu - 音游开字母游戏辅助工具</AssemblyTitle>
-        <OutputType>Exe</OutputType>
+        <OutputType>WinExe</OutputType>
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
