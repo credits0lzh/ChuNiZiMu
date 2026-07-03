@@ -1,137 +1,138 @@
+# This workflow builds the ChuNiZiMu project for different platforms and architectures.
 name: Build ChuNiZiMu
 
 on:
-    workflow_dispatch:
-        inputs:
-            platform:
-                description: "Target platform"
-                required: true
-                type: choice
-                options:
-                    - windows
-                    - linux
-                    - android
-            arch:
-                description: "Target architecture"
-                required: true
-                type: choice
-                options:
-                    - x86
-                    - x86_64
-                    - arm32
-                    - arm64
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: "Target platform"
+        required: true
+        default: 'windows'
+        type: choice
+        options:
+          - windows
+          - linux
+          - android
+      arch:
+        description: "Target architecture"
+        required: true
+        default: 'x86_64'
+        type: choice
+        options:
+          - x86
+          - x86_64
+          - arm32
+          - arm64
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-            # toolchains
-            # Android NDK
-            - name: Set up Android NDK
-              if: inputs.platform == 'android'
-              uses: nttld/setup-ndk@v1
-              with:
-                  ndk-version: r26d
+      # toolchains
+      # Android NDK
+      - name: Set up Android NDK
+        if: inputs.platform == 'android'
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r26d
 
-            # Linux / Windows
-            - name: Set up GCC / MinGW
-              if: inputs.platform == 'linux' || inputs.platform == 'windows'
-              run: |
-                  sudo apt-get update
-                  if [ "${{ inputs.platform }}" == "windows" ]; then
-                    sudo apt-get install -y mingw-w64
-                  elif [ "${{ inputs.platform }}" == "linux" ]; then
-                    case "${{ inputs.arch }}" in
-                      x86)    sudo apt-get install -y gcc-multilib g++-multilib ;;
-                      arm32)  sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf ;;
-                      arm64)  sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu ;;
-                    esac
-                  fi
+      # Linux / Windows
+      - name: Set up GCC / MinGW
+        if: inputs.platform == 'linux' || inputs.platform == 'windows'
+        run: |
+          sudo apt-get update
+          if [ "${{ inputs.platform }}" == "windows" ]; then
+            sudo apt-get install -y mingw-w64
+          elif [ "${{ inputs.platform }}" == "linux" ]; then
+            case "${{ inputs.arch }}" in
+              x86)    sudo apt-get install -y gcc-multilib g++-multilib ;;
+              arm32)  sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf ;;
+              arm64)  sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu ;;
+            esac
+          fi
 
-            # env
-            - name: Configure Environment
-              run: |
-                  if [ "${{ inputs.platform }}" == "android" ]; then
-                    case "${{ inputs.arch }}" in
-                      x86)    echo "ANDROID_ABI=x86" >> $GITHUB_ENV ;;
-                      x86_64) echo "ANDROID_ABI=x86_64" >> $GITHUB_ENV ;;
-                      arm32)  echo "ANDROID_ABI=armeabi-v7a" >> $GITHUB_ENV ;;
-                      arm64)  echo "ANDROID_ABI=arm64-v8a" >> $GITHUB_ENV ;;
-                    esac
-                  elif [ "${{ inputs.platform }}" == "linux" ]; then
-                    case "${{ inputs.arch }}" in
-                      x86)
-                        echo "CC=gcc" >> $GITHUB_ENV
-                        echo "CXX=g++" >> $GITHUB_ENV
-                        echo "CMAKE_FLAGS=-DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_EXE_LINKER_FLAGS=-m32" >> $GITHUB_ENV ;;
-                      x86_64)
-                        echo "CC=gcc" >> $GITHUB_ENV
-                        echo "CXX=g++" >> $GITHUB_ENV ;;
-                      arm32)
-                        echo "CC=arm-linux-gnueabihf-gcc" >> $GITHUB_ENV
-                        echo "CXX=arm-linux-gnueabihf-g++" >> $GITHUB_ENV
-                        echo "CMAKE_FLAGS=-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=arm" >> $GITHUB_ENV ;;
-                      arm64)
-                        echo "CC=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
-                        echo "CXX=aarch64-linux-gnu-g++" >> $GITHUB_ENV
-                        echo "CMAKE_FLAGS=-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=aarch64" >> $GITHUB_ENV ;;
-                    esac
-                  fi
+      # env
+      - name: Configure Environment
+        run: |
+          if [ "${{ inputs.platform }}" == "android" ]; then
+            case "${{ inputs.arch }}" in
+              x86)    echo "ANDROID_ABI=x86" >> $GITHUB_ENV ;;
+              x86_64) echo "ANDROID_ABI=x86_64" >> $GITHUB_ENV ;;
+              arm32)  echo "ANDROID_ABI=armeabi-v7a" >> $GITHUB_ENV ;;
+              arm64)  echo "ANDROID_ABI=arm64-v8a" >> $GITHUB_ENV ;;
+            esac
+          elif [ "${{ inputs.platform }}" == "linux" ]; then
+            case "${{ inputs.arch }}" in
+              x86)
+                echo "CC=gcc" >> $GITHUB_ENV
+                echo "CXX=g++" >> $GITHUB_ENV
+                echo "CMAKE_FLAGS=-DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_EXE_LINKER_FLAGS=-m32" >> $GITHUB_ENV ;;
+              x86_64)
+                echo "CC=gcc" >> $GITHUB_ENV
+                echo "CXX=g++" >> $GITHUB_ENV ;;
+              arm32)
+                echo "CC=arm-linux-gnueabihf-gcc" >> $GITHUB_ENV
+                echo "CXX=arm-linux-gnueabihf-g++" >> $GITHUB_ENV
+                echo "CMAKE_FLAGS=-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=arm" >> $GITHUB_ENV ;;
+              arm64)
+                echo "CC=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+                echo "CXX=aarch64-linux-gnu-g++" >> $GITHUB_ENV
+                echo "CMAKE_FLAGS=-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=aarch64" >> $GITHUB_ENV ;;
+            esac
+          fi
 
-            - name: Build
-              run: |
-                  mkdir -p build && cd build
+      - name: Build
+        run: |
+          mkdir -p build && cd build
 
-                  if [ "${{ inputs.platform }}" == "windows" ]; then
-                    case "${{ inputs.arch }}" in
-                      x86)    COMPILER_PREFIX="i686-w64-mingw32" ;;
-                      x86_64) COMPILER_PREFIX="x86_64-w64-mingw32" ;;
-                      arm32)  COMPILER_PREFIX="armv7-w64-mingw32" ;;
-                      arm64)  COMPILER_PREFIX="aarch64-w64-mingw32" ;;
-                    esac
-                    cmake .. \
-                      -DCMAKE_SYSTEM_NAME=Windows \
-                      -DCMAKE_C_COMPILER=${COMPILER_PREFIX}-gcc \
-                      -DCMAKE_CXX_COMPILER=${COMPILER_PREFIX}-g++ \
-                      -DCMAKE_BUILD_TYPE=Release
+          if [ "${{ inputs.platform }}" == "windows" ]; then
+            case "${{ inputs.arch }}" in
+              x86)    COMPILER_PREFIX="i686-w64-mingw32" ;;
+              x86_64) COMPILER_PREFIX="x86_64-w64-mingw32" ;;
+              arm32)  COMPILER_PREFIX="armv7-w64-mingw32" ;;
+              arm64)  COMPILER_PREFIX="aarch64-w64-mingw32" ;;
+            esac
+            cmake .. \
+              -DCMAKE_SYSTEM_NAME=Windows \
+              -DCMAKE_C_COMPILER=${COMPILER_PREFIX}-gcc \
+              -DCMAKE_CXX_COMPILER=${COMPILER_PREFIX}-g++ \
+              -DCMAKE_BUILD_TYPE=Release
 
-                  elif [ "${{ inputs.platform }}" == "android" ]; then
-                    cmake .. \
-                      -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
-                      -DANDROID_ABI=${ANDROID_ABI} \
-                      -DANDROID_PLATFORM=android-21 \
-                      -DCMAKE_BUILD_TYPE=Release
+          elif [ "${{ inputs.platform }}" == "android" ]; then
+            cmake .. \
+              -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
+              -DANDROID_ABI=${ANDROID_ABI} \
+              -DANDROID_PLATFORM=android-21 \
+              -DCMAKE_BUILD_TYPE=Release
 
-                  else # Linux
-                    cmake .. \
-                      -DCMAKE_C_COMPILER=${CC} \
-                      -DCMAKE_CXX_COMPILER=${CXX} \
-                      ${CMAKE_FLAGS} \
-                      -DCMAKE_BUILD_TYPE=Release
-                  fi
+          else # Linux
+            cmake .. \
+              -DCMAKE_C_COMPILER=${CC} \
+              -DCMAKE_CXX_COMPILER=${CXX} \
+              ${CMAKE_FLAGS} \
+              -DCMAKE_BUILD_TYPE=Release
+          fi
 
-                  cmake --build . -j$(nproc 2>/dev/null || sysctl -n hw.ncpu)
+          cmake --build . -j$(nproc 2>/dev/null || sysctl -n hw.ncpu)
 
-            - name: Determine artifact name
-              id: artifact
-              run: |
-                  EXT=""
-                  if [ "${{ inputs.platform }}" == "windows" ]; then
-                    EXT=".exe"
-                  fi
-                  BIN_PATH=$(find build -name "chunizimu${EXT}" -type f | head -1)
-                  if [ -z "$BIN_PATH" ]; then
-                    BIN_PATH=$(find build -name "chunizimu" -type f | head -1)
-                  fi
-                  echo "bin_path=$BIN_PATH" >> $GITHUB_OUTPUT
+      - name: Determine artifact name
+        id: artifact
+        run: |
+          EXT=""
+          if [ "${{ inputs.platform }}" == "windows" ]; then
+            EXT=".exe"
+          fi
+          BIN_PATH=$(find build -name "chunizimu${EXT}" -type f | head -1)
+          if [ -z "$BIN_PATH" ]; then
+            BIN_PATH=$(find build -name "chunizimu" -type f | head -1)
+          fi
+          echo "bin_path=$BIN_PATH" >> $GITHUB_OUTPUT
 
-            - name: Upload artifact
-              if: steps.artifact.outputs.bin_path != ''
-              uses: actions/upload-artifact@v4
-              with:
-                  name: chunizimu-${{ inputs.platform }}-${{ inputs.arch }}
-                  path: ${{ steps.artifact.outputs.bin_path }}
-                  if-no-files-found: warn
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chunizimu-${{ inputs.platform }}-${{ inputs.arch }}
+          path: ${{ steps.artifact.outputs.bin_path }}
+          if-no-files-found: warn
